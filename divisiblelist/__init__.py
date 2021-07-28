@@ -82,25 +82,26 @@ Some notes:
 - And, off course, it's a integer division, so there is no rest:
 
   ``` console
-  >>> my_list / 3
+  >>> my_list // 3
   ValueError: can't divide 4 items by 3
   ```
 
-- To doesn't waste resources, all sub-lists are created as `Generators`.
+You can invert the division to set the number of elemets...
 
-  ``` console
-  >>> my_list / 2
-  <generator object DivisibleList.__truediv__.<locals>.<genexpr> at 0x7fc0676e
-  09e0>
-  >>> first_half, second_half = my_list / 2
-  >>> print(first_half, second_half, sep="\\n")
-  [0, 1]
-  [2, 3]
-  ```
+- To avoit to dwaste resources, all sub-lists are created as `Generators`.
+
+``` console
+>>> my_list / 2
+<generator object DivisibleList.__truediv__.<locals>.<genexpr> at 0x7fc0676e09
+e0>
+>>> first_half, second_half = my_list / 2
+>>> print(first_half, second_half, sep="\\n")
+[0, 1]
+[2, 3]
+```
 """
 from collections import UserList
-from typing import Generator
-
+from typing import Generator, Any
 
 class DivisibleList(UserList):
     """Customizes `collections.UserList` to add list split support by using
@@ -109,29 +110,57 @@ class DivisibleList(UserList):
     method.
     """
 
-    def __truediv__(self, divisor: int) -> Generator:
+    divide_by_chunks = False
 
-        if not isinstance(divisor, int) or isinstance(divisor, bool):
+    def __init__(self, data=None, *args, **kwargs) -> None:
+
+        super().__init__(data, *args, **kwargs)
+
+    @property
+    def dividend(self) -> int:
+        return len(self.data)
+
+    def __validate_divisor(self, value: Any) -> int:
+
+        if isinstance(value, set) and len(value) == 1:
+            self.divide_by_chunks = True
+            (value,) = value
+        else:
+            self.divide_by_chunks = False
+
+        if not isinstance(value, int) or isinstance(value, bool):
             raise TypeError(
                 "unsupported operand type(s) for /: '{}' and '{}'".format(
-                    self.__class__.__name__, divisor.__class__.__name__
+                    self.__class__.__name__, value.__class__.__name__
                 )
             )
 
-        elif divisor < 0:
+        elif value < 0:
             raise ValueError("cant't divide a list by a negative number")
 
-        elif divisor == 0:
+        elif value == 0:
             raise ZeroDivisionError
 
-        dividend = len(self.data)
+        return value
 
-        if dividend % divisor:
-            raise ValueError(f"can't divide {dividend} items by {divisor}")
+    def __do_division(self, divisor: int) -> Generator:
 
-        elements = dividend // divisor
+        elements = self.dividend // divisor
+
+        total_of_elements = step = divisor if self.divide_by_chunks else elements
 
         return (
-            self.data[part : part + elements]  # noqa: E203
-            for part in range(0, dividend, elements)
+            self.data[part : part + total_of_elements]
+            for part in range(0, self.dividend, step)
         )
+
+    def __truediv__(self, value: int) -> Generator:
+
+        divisor = self.__validate_divisor(value)
+
+        if self.dividend % divisor:
+            raise ValueError(
+                f"can't divide {self.dividend} items by {divisor}"
+            )
+
+        return self.__do_division(divisor)
