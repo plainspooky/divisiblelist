@@ -2,11 +2,14 @@ from pytest import mark, raises
 
 from .fixtures import sample_list
 
+
 class TestChunkDivisionForDivisibleList:
     """Test specific cases for chunk division."""
 
     @mark.parametrize("divisor", (True, 3.14159, [1, 2], (3, 4), "2"))
-    def test_if_ignores_a_set_with_anything_but_a_integer(self, sample_list, divisor) -> None:
+    def test_if_ignores_a_set_with_anything_but_a_integer(
+        self, sample_list, divisor
+    ) -> None:
         with raises(TypeError):
             assert sample_list / {divisor}
 

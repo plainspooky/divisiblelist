@@ -2,6 +2,7 @@ from pytest import mark, raises
 
 from .fixtures import sample_list
 
+
 class TestDivisionForDivisibleList:
     """Test specific behavior for common division ("/")."""
 

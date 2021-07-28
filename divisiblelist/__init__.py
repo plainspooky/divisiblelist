@@ -101,7 +101,8 @@ e0>
 ```
 """
 from collections import UserList
-from typing import Generator, Any
+from typing import Any, Generator
+
 
 class DivisibleList(UserList):
     """Customizes `collections.UserList` to add list split support by using
@@ -147,10 +148,12 @@ class DivisibleList(UserList):
 
         elements = self.dividend // divisor
 
-        total_of_elements = step = divisor if self.divide_by_chunks else elements
+        total_of_elements = step = (
+            divisor if self.divide_by_chunks else elements
+        )
 
         return (
-            self.data[part : part + total_of_elements]
+            self.data[part : part + total_of_elements]  # noqa E203
             for part in range(0, self.dividend, step)
         )
 

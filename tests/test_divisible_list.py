@@ -13,7 +13,9 @@ class TestCommonPartDivibleList:
         with raises(ZeroDivisionError):
             sample_list / 0
 
-    @mark.parametrize("divisor", (True, {"1": 2}, 3.14159, [1, 2], (3, 4), "2"))
+    @mark.parametrize(
+        "divisor", (True, {"1": 2}, 3.14159, [1, 2], (3, 4), "2")
+    )
     def test_if_raises_type_error_for_any_type_not_supported(
         self, sample_list, divisor
     ) -> None:
