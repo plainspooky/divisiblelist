@@ -1,6 +1,4 @@
-"""
-Tests' fixtures
-"""
+"""Tests' fixtures."""
 from pytest import fixture
 
 from divisiblelist import DivisibleList

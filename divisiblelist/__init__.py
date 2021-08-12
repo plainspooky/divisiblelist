@@ -1,27 +1,8 @@
-# divisiblelist
-# https://github.com/plainspooky/divisiblelist
-#
-# A customized 'collections.UserList' that adds list spliting using
-# the "/" (division) operator.
-#
-# Copyright (C) 2021  Giovanni Nunes
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
 """
-A customized 'collections.UserList' that adds list spliting using
-the "/" (division) operator.
+A customized **list** type (based on [collections.UserList](
+https://docs.python.org/3/library/collections.html#collections.UserDict)
+that can be easilly splited in sublist using  `/` (division) and `//`
+(integer division) operators.
 
 ``` python
 import divisiblelist as dl
@@ -30,23 +11,33 @@ my_list = dl.DivisibleList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
 for sublist in my_list / 2:
     print(sublist)
-
-# output:
-# [0, 1, 2, 3, 4]
-# [5, 6, 7, 8, 9]
 ```
 
-## Instalation
+That results in `[0, 1, 2, 3, 4]` and `[5, 6, 7, 8, 9]`.
 
-To install the lastest version of this module, use:
+If divisor and dividend (as list lenght) aren't multiples the last sublist
+will contains fewer elements.
+
+``` python
+for sublist in my_list / 3:
+    print(sublist)
+```
+
+Will results  `[0, 1, 2]`, `[3, 4, 5]`, `[6, 7, 8]`, and `[9]`
+
+# Instalation
+
+Use:
 
 ``` console
 pip install git+https://github.com/plainspooky/divisiblelist
 ```
 
-## Usage
+To install the lastest version of this module.
 
-To create a new "list":
+# Usage
+
+To create a **divisiblelist** object:
 
 ``` console
 >>> import divisiblelist as dl
@@ -55,9 +46,12 @@ To create a new "list":
 [0, 1, 2, 3]
 ```
 
-Some notes:
+It works like as an ordinary **list** so you can use `.append()`, `.count()`,
+`.index()`, `.pop()` or any other built-in method from **list** type.
 
-- This lists can only be divided by an integer value, tries to use another
+But there are some concerns about list division:
+
+1. A list can be divided only by integer values, tries to use another
   type as divisor raises `TypeError` exception:
 
   ``` console
@@ -65,30 +59,52 @@ Some notes:
   TypeError: unsupported operand type(s) for /: 'DivisibleList' and 'str'
   ```
 
-- Divisor must be greater than zero:
+2. Divisor must be greater than zero:
 
   ``` console
   >>> my_list / -2
   ValueError: cant't divide a list by a negative number
   ```
 
-- You can't divide a list by zero:
+3. A **list** can't be divided by zero:
 
   ``` console
   >>> my_list / 0
   ZeroDivisionError
   ```
 
-- And, off course, it's a integer division, so there is no rest:
+# Features
 
-  ``` console
-  >>> my_list // 3
-  ValueError: can't divide 4 items by 3
-  ```
+## Integer division
 
-You can invert the division to set the number of elemets...
+If you want to force the same number of elements in a sublist, use `//`
+instead of `/` to force an integer division.
 
-- To avoit to dwaste resources, all sub-lists are created as `Generators`.
+``` console
+>>> my_list // 3
+ValueError: can't divide 4 items by 3
+```
+
+It raises a **ValueError** exception in case of the divisor isn't a
+multiple of the dividend.
+
+## Division by chunks
+
+To produce sublists with specific number of elements put divisor between
+braces.
+
+``` console
+>>> [sublist for sublist in my_list / {1}]
+[[0],[1],[2],[3]]
+```
+
+It follows same rule for integer division when using `//`.
+
+## Generator function
+
+To avoid waste resources, all sub-lists are created as a [generator
+function](https://wiki.python.org/moin/Generators) and will work
+only by demand.
 
 ``` console
 >>> my_list / 2
@@ -100,70 +116,4 @@ e0>
 [2, 3]
 ```
 """
-from collections import UserList
-from typing import Any, Generator
-
-
-class DivisibleList(UserList):
-    """Customizes `collections.UserList` to add list split support by using
-    the `/` operator by implementing the [__truediv__](
-    https://docs.python.org/3.9/reference/datamodel.html#object.__truediv__)
-    method.
-    """
-
-    divide_by_chunks = False
-
-    def __init__(self, data=None, *args, **kwargs) -> None:
-
-        super().__init__(data, *args, **kwargs)
-
-    @property
-    def dividend(self) -> int:
-        return len(self.data)
-
-    def __validate_divisor(self, value: Any) -> int:
-
-        if isinstance(value, set) and len(value) == 1:
-            self.divide_by_chunks = True
-            (value,) = value
-        else:
-            self.divide_by_chunks = False
-
-        if not isinstance(value, int) or isinstance(value, bool):
-            raise TypeError(
-                "unsupported operand type(s) for /: '{}' and '{}'".format(
-                    self.__class__.__name__, value.__class__.__name__
-                )
-            )
-
-        elif value < 0:
-            raise ValueError("cant't divide a list by a negative number")
-
-        elif value == 0:
-            raise ZeroDivisionError
-
-        return value
-
-    def __do_division(self, divisor: int) -> Generator:
-
-        elements = self.dividend // divisor
-
-        total_of_elements = step = (
-            divisor if self.divide_by_chunks else elements
-        )
-
-        return (
-            self.data[part : part + total_of_elements]  # noqa E203
-            for part in range(0, self.dividend, step)
-        )
-
-    def __truediv__(self, value: int) -> Generator:
-
-        divisor = self.__validate_divisor(value)
-
-        if self.dividend % divisor:
-            raise ValueError(
-                f"can't divide {self.dividend} items by {divisor}"
-            )
-
-        return self.__do_division(divisor)
+from .main import DivisibleList

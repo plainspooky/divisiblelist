@@ -1,7 +1,5 @@
-"""Tests
----
-Just add module into the context to help pytest to find everything it needs
-to work."""
+"""Just add module into the context to help pytest to find everything
+it needs to work."""
 from os import path
 from sys import path as sys_path
 

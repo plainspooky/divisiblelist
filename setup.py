@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name="divisivlelist",
     packages=["divisiblelist"],
-    version="0.1",
+    version="0.2",
     license="gpl-3.0",
     description="Customizes 'UserList' to support spliting with / operator.",
     long_description=open("README.md").read(),

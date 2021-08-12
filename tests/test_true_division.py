@@ -1,24 +1,17 @@
-from pytest import mark, raises
+"""Tests for list division."""
+from pytest import mark
 
-from .fixtures import sample_list
+from .fixtures import sample_list  # noqa F401
 
 
 class TestDivisionForDivisibleList:
     """Test specific behavior for common division ("/")."""
 
-    @mark.parametrize("divisor", (1, 2, 3, 4, 6, 8, 9, 12, 24, 72))
-    def test_if_returns_the_list_divided_in_an_equal_number_of_elements(
+    @mark.parametrize("divisor", (1, 2, 3, 5, 7, 9, 11, 13, 17, 19, 72))
+    def test_if_divided_list_contains_at_least_one_list_with_expected_length(
         self, sample_list, divisor
     ) -> None:
 
-        expected_size = len(sample_list) / divisor
+        expected_size = len(sample_list) // divisor
 
         assert expected_size in [len(i) for i in sample_list / divisor]
-
-    @mark.parametrize("divisor", (5, 7, 10, 11, 48))
-    def test_if_raises_value_error_if_dividend_and_divisor_arent_multiples(
-        self, sample_list, divisor
-    ) -> None:
-
-        with raises(ValueError):
-            sample_list / divisor
